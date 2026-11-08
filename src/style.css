@@ -111,3 +111,22 @@ body{font-size:16px}
   .suggestions b{font-size:12px}
   .suggestions small{font-size:10px}
 }
+
+
+/* Il marchio in testata funziona come collegamento alla homepage */
+.brand-home{
+  appearance:none;
+  border:0;
+  padding:0;
+  margin:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.brand-home:focus-visible{
+  outline:2px solid #80e2df;
+  outline-offset:5px;
+  border-radius:5px;
+}
