@@ -51,3 +51,63 @@ body{font-size:15px}
  .history-item-wrap .delete-chat{opacity:1;padding:8px}
  .page-head h1{font-size:25px}
 }
+
+
+/* 2.2 typography refinement – leggibilità aumentata */
+body{font-size:16px}
+.top-status{font-size:10px}
+.nav-caption{font-size:9px}
+.nav-link{font-size:13px}
+.preview-card{font-size:12px}
+.preview-card p{font-size:10px}
+.profile b{font-size:11px}
+.profile small{font-size:9px}
+.toolbar-title{font-size:13px}
+.toolbar-actions button{font-size:10px}
+.demo{font-size:8px}
+.kicker{font-size:9px}
+.welcome>p,.page-head p{font-size:13px}
+.suggestions b{font-size:12px}
+.suggestions small{font-size:10px}
+.msg-body>b{font-size:12px}
+.msg-body p{font-size:14px;line-height:1.8}
+.attached span,.pending-file{font-size:9px}
+.sources-head{font-size:10px}
+.sources-head span{font-size:9px}
+.source b{font-size:9px}
+.source small{font-size:9px}
+.composer textarea{font-size:13px}
+.hint{font-size:9px}
+.history-title small{font-size:8px}
+.history-title h3{font-size:18px}
+.history-new,.primary{font-size:10px}
+.searchbox input{font-size:9px}
+.recent{font-size:8px}
+.history-item b{font-size:11px}
+.history-item small{font-size:8px}
+.history-foot b{font-size:9px}
+.history-foot p{font-size:8px}
+.page-head h1{font-size:34px}
+.archive-stats small{font-size:9px}
+.doc-name b{font-size:11px}
+.doc-name small,.doc-type,.doc-date{font-size:10px}
+.filter{font-size:9px}
+.info-banner{font-size:9px}
+.upload-card-top{font-size:11px}
+.drop b{font-size:11px}
+.drop small{font-size:9px}
+.result-head b{font-size:11px}
+.result-head small{font-size:9px}
+.result-metrics small{font-size:9px}
+.diff-tag{font-size:8px}
+.diff-row b{font-size:11px}
+.diff-row p,.result-copy{font-size:10px}
+.attach-menu button{font-size:11px}
+@media(max-width:760px){
+  .welcome h1{font-size:32px}
+  .welcome>p,.page-head p{font-size:12px}
+  .msg-body p{font-size:13px}
+  .page-head h1{font-size:27px}
+  .suggestions b{font-size:12px}
+  .suggestions small{font-size:10px}
+}
