@@ -1,81 +1,75 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import {
-  LayoutDashboard, ScanSearch, Files, History, Settings, CircleHelp, Bell,
-  Search, Plus, UploadCloud, Image as ImageIcon, FileText, ArrowUp, Sparkles,
-  ChevronDown, MoreHorizontal, CheckCircle2, Clock3, AlertTriangle, X,
-  Menu, Download, MessageSquareText, SlidersHorizontal, Send, Paperclip,
-  Layers3, Activity, FileCheck2, PanelLeftClose
-} from 'lucide-react'
+import { Sparkles, Plus, Search, Paperclip, ArrowUp, PanelRightClose, PanelRightOpen, Menu, X, MessageSquare, Clock3, FileText, Image as ImageIcon, ChevronDown, MoreHorizontal, Trash2, SlidersHorizontal, CircleHelp, Settings2, LayoutDashboard } from 'lucide-react'
 import './style.css'
 
-const initialAnalyses = [
-  { name: 'Piastrella effetto marmo — Lotto A24', type: 'Analisi visiva', date: 'Oggi, 10:42', status: 'Completata', tone: 'green', detail: '3 immagini · 2,4 MB' },
-  { name: 'Scheda tecnica gres porcellanato', type: 'Analisi documento', date: 'Ieri, 16:18', status: 'Completata', tone: 'green', detail: 'PDF · 8 pagine' },
-  { name: 'Controllo variazioni cromatiche', type: 'Analisi visiva', date: '5 nov 2026', status: 'Da verificare', tone: 'amber', detail: '5 immagini · 6,1 MB' },
-]
-const nav = [
-  { label: 'Workspace', items: [{ name: 'Panoramica', icon: LayoutDashboard }, { name: 'Nuova analisi', icon: ScanSearch }, { name: 'Documenti', icon: Files }, { name: 'Cronologia', icon: History }] },
-  { label: 'Preferenze', items: [{ name: 'Impostazioni', icon: Settings }, { name: 'Centro assistenza', icon: CircleHelp }] },
+const starter = [
+  { id: 1, title: 'Variazioni cromatiche lotto A24', time: 'Oggi · 10:42' },
+  { id: 2, title: 'Analisi scheda tecnica gres', time: 'Ieri · 16:18' },
+  { id: 3, title: 'Possibili difetti superficiali', time: '5 nov · 11:06' },
+  { id: 4, title: 'Confronto campioni effetto marmo', time: '4 nov · 09:32' },
+  { id: 5, title: 'Resistenza e assorbimento acqua', time: '2 nov · 15:50' },
 ]
 function App() {
-  const [active, setActive] = useState('Panoramica')
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [history, setHistory] = useState(starter)
+  const [current, setCurrent] = useState(1)
+  const [chats, setChats] = useState({1: [{role:'assistant', text:'Ciao! Sono TrimapAI, il tuo assistente per il mondo della ceramica.\\n\\nPuoi chiedermi di analizzare immagini, interpretare documenti tecnici o approfondire caratteristiche e difetti dei materiali. Come posso aiutarti oggi?'}]})
+  const [value, setValue] = useState('')
   const [files, setFiles] = useState([])
-  const [prompt, setPrompt] = useState('')
-  const [messages, setMessages] = useState([{ role: 'assistant', text: 'Ciao! Sono l’assistente TrimapAI. Posso aiutarti a interpretare immagini, schede tecniche e documentazione di prodotto. Da dove vuoi iniziare?' }])
-  const [analyses, setAnalyses] = useState(initialAnalyses)
-  const inputRef = useRef(null)
-  const title = active === 'Panoramica' ? 'Panoramica' : active
-  const upload = (list) => setFiles(old => [...old, ...Array.from(list || []).map(f => ({ name: f.name, size: (f.size / 1024 / 1024).toFixed(2) + ' MB', kind: f.type.startsWith('image/') ? 'image' : 'file' }))])
+  const [rightOpen, setRightOpen] = useState(true)
+  const [mobileHistory, setMobileHistory] = useState(false)
+  const [search, setSearch] = useState('')
+  const fileRef = useRef(null)
+  const activeChat = chats[current] || []
+  const filtered = history.filter(h => h.title.toLowerCase().includes(search.toLowerCase()))
+  const newChat = () => {
+    const id = Date.now()
+    setHistory(h => [{id, title:'Nuova conversazione', time:'Adesso'}, ...h])
+    setChats(c => ({...c, [id]: [{role:'assistant', text:'Nuova conversazione avviata. Raccontami cosa vuoi analizzare: puoi scrivere una domanda oppure allegare immagini e documenti.'}]}))
+    setCurrent(id); setValue(''); setFiles([]); setMobileHistory(false)
+  }
+  const choose = id => { setCurrent(id); setMobileHistory(false); setFiles([]) }
+  const attach = list => setFiles(f => [...f, ...Array.from(list || []).map(x => ({name:x.name, size:(x.size/1024/1024).toFixed(2)+' MB', type:x.type.startsWith('image/')?'image':'file'}))])
   const send = () => {
-    if (!prompt.trim()) return
-    const q = prompt.trim()
-    setMessages(m => [...m, { role: 'user', text: q }, { role: 'assistant', text: 'Ho ricevuto la tua richiesta. In questa demo posso mostrarti il flusso di conversazione: quando verrà collegato il motore IA di TrimapAI, qui compariranno le analisi basate sui tuoi file e sui dati tecnici.' }])
-    setPrompt('')
+    if (!value.trim() && !files.length) return
+    const text = value.trim() || 'Analizza i file che ho allegato.'
+    const fileNames = files.map(f=>f.name)
+    setChats(c => ({...c, [current]: [...(c[current]||[]), {role:'user', text, files:fileNames}, {role:'assistant', text:'Ho ricevuto la tua richiesta'+(fileNames.length?' e '+fileNames.length+' file allegat'+(fileNames.length===1?'o':'i'):'')+'.\\n\\nQuesta è una risposta dimostrativa: quando collegheremo il motore IA di TrimapAI, qui verrà mostrata l’analisi effettiva con risultati, osservazioni e riferimenti ai documenti.'}]}))
+    setHistory(h => h.map(item => item.id===current && item.title==='Nuova conversazione' ? {...item, title:text.slice(0,38)+(text.length>38?'…':'')} : item))
+    setValue(''); setFiles([])
   }
-  const startAnalysis = () => {
-    if (!files.length) { inputRef.current?.click(); return }
-    setAnalyses(a => [{ name: files[0].name, type: 'Analisi dimostrativa', date: 'Adesso', status: 'Demo', tone: 'blue', detail: `${files.length} file caricati` }, ...a])
-    setActive('Cronologia')
-  }
-  const page = () => {
-    if (active === 'Nuova analisi') return <section className="page-grid">
-      <div className="panel upload-panel">
-        <div className="panel-head"><div><div className="eyebrow">AREA DI LAVORO</div><h2>Carica i tuoi file</h2><p>Seleziona immagini o documenti da analizzare.</p></div><span className="step">01 / 02</span></div>
-        <label className="dropzone"><input ref={inputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt,.xlsx" onChange={e => upload(e.target.files)} /><span className="upload-icon"><UploadCloud size={25}/></span><strong>Trascina qui i tuoi file</strong><span>oppure <b>sfoglia dal computer</b></span><small>JPG, PNG, PDF, DOCX · massimo 25 MB per file</small></label>
-        {files.length > 0 && <div className="file-list">{files.map((f,i)=><div className="file-row" key={i}><span className="file-icon">{f.kind === 'image' ? <ImageIcon/> : <FileText/>}</span><div className="file-info"><b>{f.name}</b><small>{f.size}</small></div><button className="icon-btn" onClick={()=>setFiles(v=>v.filter((_,j)=>j!==i))}><X size={16}/></button></div>)}</div>}
-        <div className="analysis-options"><h3><SlidersHorizontal size={17}/> Tipo di analisi</h3><div className="option selected"><span className="option-radio"/><div><b>Analisi intelligente</b><small>Analisi generale di immagini e documenti</small></div><Sparkles size={18}/></div><div className="option"><span className="option-radio"/><div><b>Controllo qualità visivo</b><small>Ricerca di difetti e variazioni superficiali</small></div></div></div>
-        <button className="primary-btn full" onClick={startAnalysis}>Avvia analisi dimostrativa <ArrowUp size={17}/></button>
-        <p className="demo-note">Demo: i file restano nel browser e non vengono inviati a un servizio IA.</p>
-      </div>
-      <aside className="side-info"><div className="tip-card"><div className="tip-symbol"><Sparkles/></div><h3>Ottieni il massimo dall'analisi</h3><p>Per risultati più chiari, carica immagini nitide e documenti completi. Puoi aggiungere più file alla stessa analisi.</p><div className="tip-line"><CheckCircle2/> Immagini ad alta risoluzione</div><div className="tip-line"><CheckCircle2/> Documenti leggibili</div><div className="tip-line"><CheckCircle2/> Informazioni sul lotto</div></div><div className="mini-card"><div className="mini-title">Formati supportati</div><div className="format-grid"><span><ImageIcon/> JPG / PNG</span><span><FileText/> PDF</span><span><FileText/> DOCX</span><span><Layers3/> XLSX</span></div></div></aside>
-    </section>
-    if (active === 'Documenti') return <div className="panel"><div className="panel-head"><div><div className="eyebrow">ARCHIVIO</div><h2>I tuoi documenti</h2><p>Raccogli qui i materiali utili alle tue analisi.</p></div><button className="primary-btn" onClick={()=>setActive('Nuova analisi')}><Plus size={17}/> Aggiungi file</button></div><div className="empty-state"><div className="empty-icon"><Files/></div><h3>Nessun documento archiviato</h3><p>I documenti caricati saranno visualizzati qui quando sarà attivato l'archivio.</p><button className="secondary-btn" onClick={()=>setActive('Nuova analisi')}>Carica il primo documento</button></div></div>
-    if (active === 'Cronologia') return <div className="panel"><div className="panel-head"><div><div className="eyebrow">ATTIVITÀ</div><h2>Cronologia analisi</h2><p>Rivedi le attività recenti del workspace.</p></div><button className="secondary-btn"><Download size={16}/> Esporta</button></div><AnalysisTable analyses={analyses}/></div>
-    if (active === 'Impostazioni' || active === 'Centro assistenza') return <div className="panel"><div className="eyebrow">TRIMAPAI</div><h2>{active}</h2><p className="muted">Questa sezione sarà disponibile nella prossima versione.</p></div>
-    return <Dashboard analyses={analyses} setActive={setActive} messages={messages} prompt={prompt} setPrompt={setPrompt} send={send}/>
-  }
-  return <div className="app-shell">
-    <aside className={`sidebar ${mobileOpen?'open':''}`}><div className="brand"><div className="brand-mark">T</div><div><b>Trimap<span>AI</span></b><small>INTELLIGENT CERAMIC ANALYSIS</small></div><button className="close-menu" onClick={()=>setMobileOpen(false)}><X/></button></div>
-      <div className="workspace-switch"><div className="workspace-avatar">C</div><div><b>Workspace Ceramica</b><small>Piano dimostrativo</small></div><ChevronDown size={16}/></div>
-      {nav.map(group=><div className="nav-group" key={group.label}><div className="nav-label">{group.label}</div>{group.items.map(item=><button key={item.name} className={`nav-item ${active===item.name?'active':''}`} onClick={()=>{setActive(item.name);setMobileOpen(false)}}><item.icon size={18}/>{item.name}{item.name==='Nuova analisi'&&<span className="nav-plus">+</span>}</button>)}</div>)}
-      <div className="sidebar-bottom"><div className="plan-card"><div className="plan-top"><Sparkles size={16}/> <b>TrimapAI Preview</b></div><p>Stai esplorando la versione dimostrativa della piattaforma.</p><div className="plan-progress"><span/></div><small>Ambiente demo</small></div><div className="user-row"><div className="user-avatar">CM</div><div><b>Carmine Masella</b><small>Amministratore</small></div><MoreHorizontal size={19}/></div></div>
-    </aside>
-    <main className="main-area"><header className="topbar"><button className="mobile-menu" onClick={()=>setMobileOpen(true)}><Menu/></button><div className="breadcrumb">Workspace <span>/</span> <b>{title}</b></div><div className="top-actions"><div className="status-pill"><i/> Sistema operativo</div><button className="icon-btn notification"><Bell size={19}/><i/></button><div className="top-avatar">CM</div></div></header>
-      <div className="content"><div className="page-heading"><div><div className="eyebrow">DOMENICA, 8 NOVEMBRE 2026</div><h1>{active==='Panoramica'?'Buongiorno, Carmine':title}<span>.</span></h1><p>{active==='Panoramica'?'Tutto quello che ti serve per analizzare e comprendere i tuoi materiali ceramici.':'Gestisci le tue attività e i tuoi materiali in un unico spazio.'}</p></div>{active==='Panoramica'&&<button className="primary-btn" onClick={()=>setActive('Nuova analisi')}><Plus size={17}/> Nuova analisi</button>}</div>{page()}<footer>© 2026 TrimapAI <span>·</span> Intelligent Ceramic Analysis <span className="footer-right">Demo frontend · Non collegato al motore IA</span></footer></div>
-    </main>
+  return <div className="shell">
+    <header className="topbar">
+      <div className="brand"><div className="brand-mark"><span>T</span></div><div><b>Trimap<span>AI</span></b><small>INTELLIGENT CERAMIC ANALYSIS</small></div></div>
+      <div className="top-center"><span className="online-dot"/> Ambiente dimostrativo <ChevronDown size={14}/></div>
+      <div className="top-right"><button className="top-icon" title="Impostazioni"><Settings2 size={18}/></button><div className="avatar">CM</div></div>
+    </header>
+    <div className="layout">
+      <main className="chat-area">
+        <div className="chat-toolbar"><div className="chat-name"><span className="ai-small"><Sparkles size={15}/></span><b>{history.find(h=>h.id===current)?.title || 'Nuova conversazione'}</b><span className="demo-chip">DEMO</span></div><div className="toolbar-actions"><button onClick={newChat}><Plus size={16}/> Nuova chat</button><button className="history-toggle" onClick={()=>setRightOpen(v=>!v)}>{rightOpen?<PanelRightClose size={17}/>:<PanelRightOpen size={17}/>}</button><button className="mobile-history" onClick={()=>setMobileHistory(true)}><Clock3 size={17}/></button></div></div>
+        <section className="conversation">
+          {activeChat.length <= 1 ? <div className="welcome">
+            <div className="welcome-icon"><Sparkles size={24}/></div>
+            <div className="welcome-kicker">IL TUO ASSISTENTE INTELLIGENTE</div>
+            <h1>Da dove iniziamo<br/>oggi?</h1>
+            <p>Chiedi, esplora e analizza i tuoi materiali ceramici.<br/>Puoi scrivere una domanda o allegare i tuoi file.</p>
+            <div className="prompt-grid">
+              <button onClick={()=>setValue('Quali difetti superficiali puoi individuare in una piastrella?')}><ImageIcon/><b>Analisi visiva</b><span>Individua difetti e variazioni</span></button>
+              <button onClick={()=>setValue('Riassumi i punti principali di una scheda tecnica per gres porcellanato.')}><FileText/><b>Analisi documenti</b><span>Interpreta schede e PDF</span></button>
+              <button onClick={()=>setValue('Quali parametri incidono sulla qualità finale di una piastrella?')}><SlidersHorizontal/><b>Supporto tecnico</b><span>Approfondisci materiali e processi</span></button>
+            </div>
+          </div> : <div className="messages">{activeChat.map((m,i)=><div className={`message ${m.role}`} key={i}><div className="message-avatar">{m.role==='assistant'?<Sparkles size={15}/>: 'CM'}</div><div className="message-body"><div className="message-author">{m.role==='assistant'?'TrimapAI':'Tu'}</div><p>{m.text}</p>{m.files?.length>0&&<div className="attached-in-message">{m.files.map((f,j)=><span key={j}><FileText size={13}/>{f}</span>)}</div>}</div></div>)}</div>}
+        </section>
+        <div className="composer-wrap">
+          {files.length>0&&<div className="pending-files">{files.map((f,i)=><div className="pending-file" key={i}><span>{f.type==='image'?<ImageIcon size={15}/>:<FileText size={15}/>}</span><div><b>{f.name}</b><small>{f.size}</small></div><button onClick={()=>setFiles(v=>v.filter((_,j)=>j!==i))}><X size={14}/></button></div>)}</div>}
+          <div className="composer"><button className="attach-btn" onClick={()=>fileRef.current?.click()} title="Allega file"><Paperclip size={19}/></button><input ref={fileRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt,.xlsx" onChange={e=>attach(e.target.files)}/><textarea value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}} placeholder="Scrivi un messaggio a TrimapAI..." rows="1"/><button className="send" onClick={send} disabled={!value.trim()&&!files.length}><ArrowUp size={19}/></button></div>
+          <div className="composer-hint">TrimapAI può commettere errori. Verifica sempre le informazioni tecniche importanti.</div>
+        </div>
+      </main>
+      {rightOpen&&<aside className="history-panel"><div className="history-head"><div><span className="eyebrow">WORKSPACE</span><h3>Cronologia</h3></div><button className="new-icon" onClick={newChat}><Plus size={17}/></button></div><button className="history-new" onClick={newChat}><Plus size={16}/> Nuova conversazione</button><div className="history-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cerca nelle chat..."/></div><div className="history-label">RECENTI</div><div className="history-list">{filtered.map(h=><button key={h.id} className={`history-item ${current===h.id?'selected':''}`} onClick={()=>choose(h.id)}><MessageSquare size={15}/><span><b>{h.title}</b><small>{h.time}</small></span><MoreHorizontal className="more" size={16}/></button>)}{filtered.length===0&&<div className="no-results">Nessuna conversazione trovata</div>}</div><div className="history-bottom"><div className="history-note"><div className="note-icon"><Sparkles size={15}/></div><div><b>TrimapAI Preview</b><p>Questa demo mostra l'esperienza di utilizzo. Le risposte non sono ancora collegate al motore IA.</p></div></div><button className="help-link"><CircleHelp size={15}/> Centro assistenza</button></div></aside>}
+      {mobileHistory&&<div className="mobile-overlay" onClick={()=>setMobileHistory(false)}><aside className="mobile-history-panel" onClick={e=>e.stopPropagation()}><div className="mobile-history-top"><b>Cronologia</b><button onClick={()=>setMobileHistory(false)}><X/></button></div><button className="history-new" onClick={newChat}><Plus size={16}/> Nuova conversazione</button>{filtered.map(h=><button key={h.id} className={`history-item ${current===h.id?'selected':''}`} onClick={()=>choose(h.id)}><MessageSquare size={15}/><span><b>{h.title}</b><small>{h.time}</small></span></button>)}</aside></div>}
+    </div>
+    <footer className="foot"><span>© 2026 TrimapAI</span><span>·</span><span>Intelligent Ceramic Analysis</span><span className="foot-right">Frontend demo · Motore IA non collegato</span></footer>
   </div>
 }
-function Dashboard({analyses,setActive,messages,prompt,setPrompt,send}) {
- return <>
-  <div className="hero-strip"><div className="hero-copy"><div className="hero-tag"><Sparkles size={14}/> IL TUO ASSISTENTE PER LA CERAMICA</div><h2>La conoscenza dei tuoi materiali,<br/>in un unico spazio.</h2><p>Carica immagini e documenti, esplora i dati e dialoga con il tuo assistente intelligente.</p><button className="hero-btn" onClick={()=>setActive('Nuova analisi')}>Inizia una nuova analisi <ArrowUp size={16}/></button></div><div className="hero-art"><div className="art-glow"/><div className="tile tile-back"/><div className="tile tile-mid"/><div className="tile tile-front"><div className="tile-vein"/></div><div className="art-chip"><Activity size={15}/> Precisione · Qualità · Analisi</div></div></div>
-  <div className="stats-grid"><Stat icon={ScanSearch} label="Analisi effettuate" value="12" note="+3 questa settimana" color="blue"/><Stat icon={Files} label="Documenti caricati" value="28" note="Nel workspace" color="purple"/><Stat icon={CheckCircle2} label="Analisi completate" value="10" note="83% del totale" color="green"/><Stat icon={Clock3} label="Tempo risparmiato" value="—" note="Disponibile con IA attiva" color="orange"/></div>
-  <div className="dashboard-grid"><div className="panel recent-panel"><div className="panel-head"><div><h2>Analisi recenti</h2><p>Le ultime attività del tuo workspace</p></div><button className="text-btn" onClick={()=>setActive('Cronologia')}>Vedi tutte <span>→</span></button></div><AnalysisTable analyses={analyses.slice(0,3)}/></div>
-   <div className="panel assistant-panel"><div className="assistant-head"><div className="assistant-icon"><Sparkles size={18}/></div><div><h3>Assistente TrimapAI</h3><small><i/> Pronto ad aiutarti <span className="demo-label">DEMO</span></small></div><MoreHorizontal size={20}/></div><div className="chat-preview">{messages.slice(-2).map((m,i)=><div key={i} className={`chat-line ${m.role}`}>{m.role==='assistant'&&<div className="tiny-ai"><Sparkles size={12}/></div>}<p>{m.text}</p></div>)}</div><div className="suggestions"><button onClick={()=>setPrompt('Quali difetti posso individuare su una superficie ceramica?')}>Come individuare i difetti?</button><button onClick={()=>setPrompt('Quali informazioni contiene una scheda tecnica?')}>Leggere una scheda tecnica</button></div><div className="chat-input"><button title="Allega file" onClick={()=>setActive('Nuova analisi')}><Paperclip size={17}/></button><input value={prompt} onChange={e=>setPrompt(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Chiedi qualcosa a TrimapAI..."/><button className="send-btn" onClick={send}><Send size={16}/></button></div><div className="chat-foot">Le risposte mostrate sono simulate a scopo dimostrativo.</div></div>
-  </div>
- </>
-}
-function Stat({icon:Icon,label,value,note,color}) { return <div className="stat-card"><div className={`stat-icon ${color}`}><Icon size={19}/></div><div className="stat-label">{label}</div><div className="stat-value">{value}</div><div className="stat-note">{note}</div></div> }
-function AnalysisTable({analyses}) { return <div className="table-wrap"><table><thead><tr><th>Nome analisi</th><th>Tipologia</th><th>Data</th><th>Stato</th><th></th></tr></thead><tbody>{analyses.map((a,i)=><tr key={i}><td><div className="analysis-name"><span className="doc-symbol">{a.type.includes('visiva')?<ImageIcon size={16}/>:<FileText size={16}/>}</span><div><b>{a.name}</b><small>{a.detail}</small></div></div></td><td>{a.type}</td><td>{a.date}</td><td><span className={`status ${a.tone}`}><i/>{a.status}</span></td><td><button className="icon-btn"><MoreHorizontal size={18}/></button></td></tr>)}</tbody></table></div> }
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(<App/>)

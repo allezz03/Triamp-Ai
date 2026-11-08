@@ -1,16 +1,7 @@
-# TrimapAI
-
-Demo frontend per l'analisi di immagini e documenti nel settore ceramico.
-
-## Avvio locale
-```bash
-npm install
-npm run dev
-```
+# TrimapAI — Demo frontend
+Interfaccia dimostrativa per un assistente IA dedicato al settore ceramico.
 
 ## Pubblicazione su Vercel
-Importa il repository GitHub su Vercel. Vercel rileva automaticamente Vite:
-- Build command: `npm run build`
-- Output directory: `dist`
+Importa il repository GitHub su Vercel. Framework: Vite; build: `npm run build`; output: `dist`.
 
-Questa versione è una demo frontend: le analisi e le risposte dell'assistente sono simulate. Non è collegata a un servizio IA o a un database.
+Le risposte sono simulate. Non sono presenti API, autenticazione o database in questa demo.
